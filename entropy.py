@@ -289,10 +289,16 @@ def entropy_by_lab(df, prior = "none", lab_name = "All Labs", dept_names = ["All
 
     return entropy_df, count_df, combined_df, kl_df, entropy_df
 
-def sodium_entropy_over_time(df_covid_hosp: pd.DataFrame, entropy_df_na: pd.DataFrame):
-    df_covid_hosp_na = df_covid_hosp[(df_covid_hosp["Date"] >= np.min(entropy_df_na["Date"])) & (df_covid_hosp["Date"] <= np.max(entropy_df_na["Date"]))]
+def sodium_entropy_over_time(df_covid_hosp: pd.DataFrame, df_entropy: pd.DataFrame, filename: str):
+    """
+    Plots a timeseries of Shannon entropy over time, with a shaded region of COVID-19 hospitalizations
+    df_covid_hosp: a pandas dataframe containing 'Date' and 'Weekly COVID-19 Hospital Admissions' columns
+    df_entropy: a pandas dataframe containing 'Date' and 'Entropy' columns
+    filename: where to save the image
+    """
+    df_covid_hosp_filtered = df_covid_hosp[(df_covid_hosp["Date"] >= np.min(df_entropy["Date"])) & (df_covid_hosp["Date"] <= np.max(df_entropy["Date"]))]
 
-    s = ggplot(entropy_df_na, aes(x = "Date", y = "Entropy", color = 'Dept')) + \
+    s = ggplot(df_entropy, aes(x = "Date", y = "Entropy", color = 'Dept')) + \
                 geom_line() + \
                 theme_bw() + \
                 theme(axis_text_x = element_text(angle = 45, vjust = 1, hjust = 1), legend_box_spacing=(0.15)) + \
@@ -302,12 +308,22 @@ def sodium_entropy_over_time(df_covid_hosp: pd.DataFrame, entropy_df_na: pd.Data
     axs = fig.get_axes()[0]
     axs_covid = axs.twinx()
     axs_covid.set_ylim(0,4500)
-    axs_covid.fill_between(df_covid_hosp_na.Date, 0, df_covid_hosp_na["Weekly COVID-19 Hospital Admissions"], color="lightgrey", alpha=0.4)
+    axs_covid.fill_between(df_covid_hosp_filtered.Date, 0, df_covid_hosp_filtered["Weekly COVID-19 Hospital Admissions"], color="lightgrey", alpha=0.4)
     axs_covid.set_ylabel("Counts of COVID hospitalizations", labelpad=10, rotation=270)
-    fig.savefig("out/Shannon Entropy of Sodium with Covid - UVA.png")
+    fig.savefig(filename)
+    return
 
 
 def create_surprisal_heatmaps(df, lab_list, dept_list, by_lab = True):
+    """
+    Plots heatmaps for surprisal values by lab or by department, saving each image separately
+    df: a pandas dataframe with the following
+    dept_name: list for departments lab is ordered in
+    lab_name = column that identifies the name of lab 
+    order_date = date time column in format %Y%m%d
+    hour_ordered = variable defining one hour block lab is ordered in. Can be engineered from date/time ordered
+    by_lab: a boolean indicating whether to plot surprisal by lab or by department
+    """
     #sns.set(rc={'figure.figsize':(11.7,8.27)})
     #np.seterr(divide='ignore')
     hours_column_names = ["12 AM", "01 AM", "02 AM", "03 AM", "04 AM", "05 AM", "06 AM",
