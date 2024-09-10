@@ -1,7 +1,6 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
-import matplotlib as plt
-from matplotlib import pylab as plt
 from plotnine import *
 from plotnine.data import *
 import seaborn as sns
